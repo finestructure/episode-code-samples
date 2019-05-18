@@ -29,50 +29,62 @@ int.run("42 Hello World")
 int.run("Hello World")
 
 
-// (A)       -> A
-// (inout A) -> Void
+do { // 1
+    let char = Parser<Character> { str in
+        guard let match = str.first else { return nil }
+        str.removeFirst()
+        return match
+    }
 
-enum Route {
-  case home
-  case profile
-  case episodes
-  case episode(id: Int)
+    char.run("abc")
+    char.run("")
 }
 
-let router = Parser<Route> { str in
-  fatalError()
+do { // 2
+    let ws = Parser<Void> { str in
+        let prefix = str.prefix(while: { $0.isWhitespace })
+        guard prefix.count > 0 else { return nil }
+        str.removeFirst(prefix.count)
+        return ()
+    }
+
+    ws.run("  abc")
+    ws.run("abc")
+    ws.run(" \n \tabc")
 }
 
-//router.run("/") // .home
-//router.run("/episodes/42") // .episode(42)
+do { // 3, 5
+    struct Token {
+        let value: String
+        var parser: Parser<String> {
+            let parser = Parser<String> { str in
+                if str.hasPrefix(self.value) {
+                    str.removeFirst(self.value.count)
+                } else { return nil }
+                return self.value
+            }
+            return parser
+        }
+    }
 
-//switch router.run("/episodes/42") {
-//case .none:
-//case .some(.home):
-//case .some(.profile):
-//case .some(.episodes):
-//case let .some(.episode(id)):
-//}
+    let int = Parser<Int> { str in
+        let sign = Token(value: "-")
+        let mult = sign.parser.run(&str) != nil ? -1 : +1
 
-import Foundation
+        let prefix = str.prefix(while: { $0.isNumber })
+        guard let int = Int(prefix) else { return nil }
+        str.removeFirst(prefix.count)
+        return int * mult
+    }
 
-enum EnumPropertyGenerator {
-  case help
-  case version
-  case invoke(urls: [URL], dryRun: Bool)
+    int.run("42")
+    int.run("42 Hello World")
+    int.run("Hello World")
+    int.run("-42")
 }
 
-let cli = Parser<EnumPropertyGenerator> { str in
-  fatalError()
-}
+do { // 6
 
-//cli.run("generate-enum-properties --version") // .version
-//cli.run("generate-enum-properties --help") // .help
-//cli.run("generate-enum-properties --dry-run /path/to/file.swift") // .invoke(["/path/to/file.swift"], dryRun: true)
-//
-//switch cli.run("generate-enum-properties --dry-run /path/to/file.swift") {
-//case .help:
-//case .version:
-//case .invoke:
-//case nil:
-//}
+
+
+}
