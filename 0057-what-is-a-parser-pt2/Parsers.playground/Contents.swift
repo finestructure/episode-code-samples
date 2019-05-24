@@ -81,6 +81,10 @@ do { // 3, 5
     int.run("42 Hello World")
     int.run("Hello World")
     int.run("-42")
+
+    "42" |> int.run
+    let sign = Token(value: "-")
+    String(("-42" |> sign.parser.run).rest) |> int.run
 }
 
 do { // 6
