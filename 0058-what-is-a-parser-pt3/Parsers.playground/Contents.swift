@@ -246,3 +246,68 @@ func parseLatLongWithScanner(_ string: String) -> Coordinate? {
 
   return Coordinate(latitude: lat * latSign, longitude: long * longSign)
 }
+
+
+// excercises
+
+// 1.
+
+extension Parser where A == Int {
+    static var int: Parser {
+        return Parser { str in
+            let prefix = str.prefix(while: { $0.isNumber })
+            guard let int = Int(prefix) else { return nil }
+            str.removeFirst(prefix.count)
+            return int
+        }
+    }
+}
+
+extension Parser where A == Double {
+    static var double: Parser {
+        return Parser { str in
+            let prefix = str.prefix(while: { $0.isNumber || $0 == "." })
+            guard let match = Double(prefix) else { return nil }
+            str.removeFirst(prefix.count)
+            return match
+        }
+    }
+}
+
+extension Parser where A == Void {
+    static func literal(_ literal: String) -> Parser<Void> {
+        return Parser<Void> { str in
+            guard str.hasPrefix(literal) else { return nil }
+            str.removeFirst(literal.count)
+            return ()
+        }
+    }
+}
+
+// 2.
+
+[1,2,3].map { (item) -> Double in
+    return Double(item * item)
+}
+
+extension Parser {
+    func map<B>(_ f: @escaping (A) -> B) -> Parser<B> {
+        return Parser<B> { str -> B? in
+            self.run(&str).map(f)
+        }
+    }
+}
+
+Parser.int.run("123")
+Parser.int
+    .map { $0 * 3 }
+    .run("123")
+
+let even = Parser.int.map { $0 % 2 == 0 }
+even.run("4")
+even.run("1")
+let north = Parser.literal("N").map { 1.0 }
+north.run("N")
+let south = Parser.literal("S").map { -1.0 }
+south.run("S")
+south.run("N")
